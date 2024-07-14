@@ -1,5 +1,12 @@
 import { ChangeEvent, useState } from "react";
 import { EditorView } from "../types";
+import {
+  FiSave as SaveIcon,
+  FiTable as TableIcon,
+  FiList as ListIcon,
+  FiEye as EyeOpenIcon,
+  FiEyeOff as EyeOffIcon,
+} from "react-icons/fi";
 
 const App = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -10,6 +17,7 @@ const App = () => {
   const [rowValues, setRowValues] =
     useState<Record<string, string | null>[]>(null);
   const [editorView, setEditorView] = useState<EditorView>(EditorView.Table);
+  const [hideEmptyFields, setHideEmptyFields] = useState<boolean>(false);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
@@ -77,15 +85,9 @@ const App = () => {
     }
   };
 
-  console.log("rowvalues", rowValues);
-
   return (
     <main>
-      <header className="p-4 border-b border-slate-200">
-        <h2>CSV Editor</h2>
-        <span>Start by selecting a file</span>
-        <br />
-        <br />
+      <header className="p-4 border-b border-slate-200 sticky top-0 bg-slate-100">
         <form>
           <input
             type="file"
@@ -111,25 +113,55 @@ const App = () => {
             <button
               onClick={() => setEditorView(EditorView.Table)}
               className={
-                "px-2 py-1 text-white rounded-md border " +
+                "px-2 py-1 text-white rounded-md border flex items-center gap-2 " +
                 (editorView === EditorView.Table
                   ? "bg-blue-500 border-blue-600 "
                   : "bg-slate-400 border-slate-500 ")
               }
             >
-              Table View
+              <span>
+                <TableIcon />
+              </span>
+              <span>Table View</span>
             </button>
             <button
               onClick={() => setEditorView(EditorView.Form)}
               className={
-                "px-2 py-1 text-white rounded-md border " +
+                "px-2 py-1 text-white rounded-md border flex items-center gap-2 " +
                 (editorView === EditorView.Form
                   ? "bg-blue-500 border-blue-600 "
                   : "bg-slate-400 border-slate-500 ")
               }
             >
-              Form View
+              <span>
+                <ListIcon />
+              </span>
+              <span>Form View</span>
             </button>
+
+            {editorView === EditorView.Form && (
+              <button
+                className="px-2 py-1 text-white rounded-md border flex items-center gap-2 bg-blue-500 ml-auto"
+                onClick={() => setHideEmptyFields(!hideEmptyFields)}
+              >
+                {hideEmptyFields && (
+                  <>
+                    <span>
+                      <EyeOpenIcon />
+                    </span>
+                    <span>Show Empty Fields</span>
+                  </>
+                )}
+                {!hideEmptyFields && (
+                  <>
+                    <span>
+                      <EyeOffIcon />
+                    </span>
+                    <span>Hide Empty Fields</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -141,7 +173,7 @@ const App = () => {
               <thead>
                 <tr>
                   {headerRow.map((header, idx) => (
-                    <th key={`data-th-${idx}`} align="left">
+                    <th key={`data-th-${idx}`} align="left" className="p-1">
                       {header}
                     </th>
                   ))}
@@ -152,18 +184,21 @@ const App = () => {
               <tbody>
                 {dataRows.map((dataRow, rowIdx) => (
                   <tr key={`data-row-${rowIdx}`}>
-                    {Object.keys(dataRow).map((key, idx) => (
-                      <td key={`data-col-${idx}`}>
-                        <input
-                          type="text"
-                          value={dataRow[key]}
-                          id={`${key}-${idx}`}
-                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                            handleInputChange(event, rowIdx, key)
-                          }
-                        />
-                      </td>
-                    ))}
+                    {Object.keys(dataRow).map((key, idx) => {
+                      return (
+                        <td key={`data-col-${idx}`}>
+                          <input
+                            type="text"
+                            className="p-2"
+                            value={dataRow[key]}
+                            id={`${key}-${idx}`}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                              handleInputChange(event, rowIdx, key)
+                            }
+                          />
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -177,19 +212,29 @@ const App = () => {
           <form>
             {dataRows.map((dataRow, rowIdx) => (
               <div key={`data-row-${rowIdx}`}>
-                {Object.keys(dataRow).map((key, idx) => (
-                  <div key={`data-col-${idx}`} className="data-row">
-                    <label>{key}</label>
-                    <input
-                      type="text"
-                      value={dataRow[key]}
-                      id={`${key}-${idx}`}
-                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                        handleInputChange(event, rowIdx, key)
-                      }
-                    />
-                  </div>
-                ))}
+                {Object.keys(dataRow).map((key, idx) => {
+                  if (!dataRow[key].trim() && hideEmptyFields) {
+                    return <></>;
+                  }
+
+                  return (
+                    <div key={`data-col-${idx}`} className="flex flex-col mb-4">
+                      <label className="font-semibold text-sm mb-2">
+                        {key}
+                      </label>
+                      <input
+                        className="border border-slate-400 rounded-md p-2"
+                        type="text"
+                        value={dataRow[key]}
+                        id={`${key}-${idx}`}
+                        placeholder={key}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                          handleInputChange(event, rowIdx, key)
+                        }
+                      />
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </form>
@@ -200,9 +245,12 @@ const App = () => {
         <div className="p-4">
           <button
             onClick={handleSaveFile}
-            className="px-2 py-1 bg-blue-500 text-white rounded-md border border-blue-600"
+            className="px-2 py-1 bg-blue-500 text-white rounded-md border border-blue-600 flex items-center gap-2"
           >
-            Save
+            <span>
+              <SaveIcon />
+            </span>
+            <span>Save</span>
           </button>
         </div>
       )}
