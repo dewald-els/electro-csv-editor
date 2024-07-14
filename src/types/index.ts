@@ -8,3 +8,8 @@ export interface FileReadResult {
   data?: Record<string, string>[];
   error?: string;
 }
+
+export enum EditorView {
+  Table,
+  Form,
+}

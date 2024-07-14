@@ -1,4 +1,5 @@
 import { ChangeEvent, useState } from "react";
+import { EditorView } from "../types";
 
 const App = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -8,6 +9,7 @@ const App = () => {
   const [dataRows, setDataRows] = useState<Record<string, string>[]>([]);
   const [rowValues, setRowValues] =
     useState<Record<string, string | null>[]>(null);
+  const [editorView, setEditorView] = useState<EditorView>(EditorView.Table);
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
@@ -79,69 +81,131 @@ const App = () => {
 
   return (
     <main>
-      <header>
-        <h1>CSV Editor</h1>
+      <header className="p-4 border-b border-slate-200">
+        <h2>CSV Editor</h2>
         <span>Start by selecting a file</span>
         <br />
         <br />
-      </header>
-      <form>
-        <input
-          type="file"
-          name="file"
-          id="file"
-          onChange={handleFileChange}
-          accept="text/csv"
-        />
-        <br />
-        <br />
-      </form>
-      {selectedFile && (
-        <div>
-          <p>Editing File: {selectedFile.name}</p>
+        <form>
+          <input
+            type="file"
+            name="file"
+            id="file"
+            onChange={handleFileChange}
+            accept="text/csv"
+          />
           <br />
-        </div>
-      )}
-      {loading && <p>Loading</p>}
-      {error && <p>{error}</p>}
+          <br />
+        </form>
+        {selectedFile && (
+          <div>
+            <p>Editing File: {selectedFile.name}</p>
+            <br />
+          </div>
+        )}
+        {loading && <p>Loading</p>}
+        {error && <p>{error}</p>}
 
-      <div className="table-container">
-        <table>
-          {headerRow.length > 0 && (
-            <thead>
-              <tr>
-                {headerRow.map((header, idx) => (
-                  <th key={`data-th-${idx}`} align="left">
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-          )}
-          {headerRow.length > 0 && (
-            <tbody>
-              {dataRows.map((dataRow, rowIdx) => (
-                <tr key={`data-row-${rowIdx}`}>
-                  {Object.keys(dataRow).map((key, idx) => (
-                    <td key={`data-col-${idx}`}>
-                      <input
-                        type="text"
-                        value={dataRow[key]}
-                        id={`${key}-${idx}`}
-                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                          handleInputChange(event, rowIdx, key)
-                        }
-                      />
-                    </td>
+        {selectedFile && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setEditorView(EditorView.Table)}
+              className={
+                "px-2 py-1 text-white rounded-md border " +
+                (editorView === EditorView.Table
+                  ? "bg-blue-500 border-blue-600 "
+                  : "bg-slate-400 border-slate-500 ")
+              }
+            >
+              Table View
+            </button>
+            <button
+              onClick={() => setEditorView(EditorView.Form)}
+              className={
+                "px-2 py-1 text-white rounded-md border " +
+                (editorView === EditorView.Form
+                  ? "bg-blue-500 border-blue-600 "
+                  : "bg-slate-400 border-slate-500 ")
+              }
+            >
+              Form View
+            </button>
+          </div>
+        )}
+      </header>
+
+      {editorView === EditorView.Table && (
+        <div className="data-container">
+          <table>
+            {headerRow.length > 0 && (
+              <thead>
+                <tr>
+                  {headerRow.map((header, idx) => (
+                    <th key={`data-th-${idx}`} align="left">
+                      {header}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          )}
-        </table>
-      </div>
+              </thead>
+            )}
+            {headerRow.length > 0 && (
+              <tbody>
+                {dataRows.map((dataRow, rowIdx) => (
+                  <tr key={`data-row-${rowIdx}`}>
+                    {Object.keys(dataRow).map((key, idx) => (
+                      <td key={`data-col-${idx}`}>
+                        <input
+                          type="text"
+                          value={dataRow[key]}
+                          id={`${key}-${idx}`}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                            handleInputChange(event, rowIdx, key)
+                          }
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            )}
+          </table>
+        </div>
+      )}
 
-      {dataRows.length > 0 && <button onClick={handleSaveFile}>Save</button>}
+      {editorView === EditorView.Form && (
+        <div className="data-container">
+          <form>
+            {dataRows.map((dataRow, rowIdx) => (
+              <div key={`data-row-${rowIdx}`}>
+                {Object.keys(dataRow).map((key, idx) => (
+                  <div key={`data-col-${idx}`} className="data-row">
+                    <label>{key}</label>
+                    <input
+                      type="text"
+                      value={dataRow[key]}
+                      id={`${key}-${idx}`}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                        handleInputChange(event, rowIdx, key)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </form>
+        </div>
+      )}
+
+      {dataRows.length > 0 && (
+        <div className="p-4">
+          <button
+            onClick={handleSaveFile}
+            className="px-2 py-1 bg-blue-500 text-white rounded-md border border-blue-600"
+          >
+            Save
+          </button>
+        </div>
+      )}
     </main>
   );
 };
