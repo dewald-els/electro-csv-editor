@@ -1,8 +1,8 @@
-import { ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 import fs from "fs/promises";
 import { EventNames, FileReadResult } from "../types";
 
-export function createReadFileFromPath() {
+export function createReadFileFromPath(mainWindow?: BrowserWindow) {
   ipcMain.handle(
     EventNames.ReadSelectedFile,
     async (event, args): Promise<FileReadResult> => {
@@ -16,6 +16,10 @@ export function createReadFileFromPath() {
         const result = await fs.readFile(filePath, {
           encoding: "utf-8",
         });
+
+        if (mainWindow) {
+          mainWindow.setTitle("CSV Editor - " + filePath.split("/")?.pop());
+        }
 
         const headersRows = separateHeaderFromRows(result);
 

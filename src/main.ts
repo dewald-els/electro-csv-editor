@@ -9,6 +9,7 @@ if (require("electron-squirrel-startup")) {
 }
 
 const createWindow = () => {
+  app.setName("CSV Editor");
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -32,7 +33,7 @@ const createWindow = () => {
   // Open the DevTools.
   //mainWindow.webContents.openDevTools();
 
-  createReadFileFromPath();
+  createReadFileFromPath(mainWindow);
   createWriteFileToPath();
 };
 

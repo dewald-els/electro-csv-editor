@@ -96,20 +96,12 @@ const App = () => {
             onChange={handleFileChange}
             accept="text/csv"
           />
-          <br />
-          <br />
         </form>
-        {selectedFile && (
-          <div>
-            <p>Editing File: {selectedFile.name}</p>
-            <br />
-          </div>
-        )}
         {loading && <p>Loading</p>}
         {error && <p>{error}</p>}
 
         {selectedFile && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-4">
             <button
               onClick={() => setEditorView(EditorView.Table)}
               className={
